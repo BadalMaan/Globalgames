@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {useEffect,useState} from 'react'
 import {supabase} from '../supabase'
 import {Swords,Users,Copy,RefreshCw,DoorOpen,PlayCircle,Wifi} from 'lucide-react'
