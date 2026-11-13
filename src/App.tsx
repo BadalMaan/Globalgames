@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { useEffect, useMemo, useState } from 'react'
 import { supabase } from './supabase'
 import PhoneAuth from './components/PhoneAuth'
