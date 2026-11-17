@@ -1,650 +1,165 @@
-
-import { useEffect, useState } from 'react'
-import { ArrowLeft, Clock3, RefreshCw, Swords, Trophy, Zap } from 'lucide-react'
+import { useState } from 'react'
+import { ArrowLeft, RefreshCw, Swords, Trophy, Zap, Crown } from 'lucide-react'
 
 type Side = 'blue' | 'red'
-type Stage = 'intro' | 'powers' | 'battle' | 'result'
+type Power = { name: string; strength: number; tone: string; symbol: string }
+type Hero = { id: string; name: string; side: Side; image: string; powers: Power[] }
+type Props = { onExit: () => void; onWin?: () => void }
+type Stage = 'intro' | 'showcase' | 'battle' | 'result'
 
-type Power = {
-  name: string
-  icon: string
-  strength: number
-  color: string
+const powerPool: Record<Side, Power[]> = {
+  blue: [
+    { name: 'Thunder Strike', strength: 86, tone: 'electric', symbol: '⚡' },
+    { name: 'Titan Shield', strength: 70, tone: 'shield', symbol: '◈' },
+    { name: 'Sonic Dash', strength: 78, tone: 'wind', symbol: '➤' },
+    { name: 'Cosmic Beam', strength: 91, tone: 'cosmic', symbol: '✦' },
+    { name: 'Frost Wave', strength: 74, tone: 'ice', symbol: '❄' },
+    { name: 'Gravity Crush', strength: 88, tone: 'gravity', symbol: '◉' },
+    { name: 'Star Burst', strength: 82, tone: 'cosmic', symbol: '✧' },
+  ],
+  red: [
+    { name: 'Inferno Blast', strength: 88, tone: 'fire', symbol: '✹' },
+    { name: 'Meteor Smash', strength: 90, tone: 'meteor', symbol: '◆' },
+    { name: 'Shadow Surge', strength: 77, tone: 'shadow', symbol: '◐' },
+    { name: 'Solar Flare', strength: 92, tone: 'solar', symbol: '☼' },
+    { name: 'Cyclone Edge', strength: 76, tone: 'wind', symbol: '⟲' },
+    { name: 'Dragon Force', strength: 85, tone: 'fire', symbol: '✦' },
+    { name: 'Crystal Guard', strength: 72, tone: 'ice', symbol: '◇' },
+  ],
 }
-
-type Hero = {
-  id: string
-  name: string
-  side: Side
-  powers: Power[]
+const heroOptions: Record<Side, { name: string; image: string }[]> = {
+  blue: [
+    { name: 'Thunder King', image: '/images/hero-blue.png' },
+    { name: 'Sky Guardian', image: '/images/hero-blue.png' },
+    { name: 'Lightning Ace', image: '/images/hero-blue.png' },
+    { name: 'Cosmic Knight', image: '/images/hero-blue.png' },
+  ],
+  red: [
+    { name: 'Fire Storm', image: '/images/hero-red.png' },
+    { name: 'Shadow Dragon', image: '/images/hero-red.png' },
+    { name: 'Solar Warrior', image: '/images/hero-red.png' },
+    { name: 'Flame Phantom', image: '/images/hero-red.png' },
+  ],
 }
-
-type Props = {
-  onExit: () => void
-  onWin?: () => void
-}
-
-const heroNames: { name: string; side: Side }[] = [
-  { name: 'Captain Global', side: 'blue' },
-  { name: 'Thunder Falcon', side: 'blue' },
-  { name: 'Galaxy Guardian', side: 'blue' },
-  { name: 'Lightning Knight', side: 'blue' },
-  { name: 'Shadow Star', side: 'red' },
-  { name: 'Flame Queen', side: 'red' },
-  { name: 'Storm Warrior', side: 'red' },
-  { name: 'Crystal Phoenix', side: 'red' },
-]
-
-const bluePowers: Power[] = [
-  { name: 'Thunder Blast', icon: '⚡', strength: 78, color: 'blue' },
-  { name: 'Power Shield', icon: '🛡️', strength: 68, color: 'cyan' },
-  { name: 'Speed Dash', icon: '💨', strength: 73, color: 'sky' },
-  { name: 'Cosmic Punch', icon: '👊', strength: 86, color: 'purple' },
-  { name: 'Star Beam', icon: '🌟', strength: 81, color: 'gold' },
-  { name: 'Ice Wave', icon: '❄️', strength: 70, color: 'ice' },
-  { name: 'Gravity Push', icon: '🌀', strength: 84, color: 'violet' },
-]
-
-const redPowers: Power[] = [
-  { name: 'Flame Strike', icon: '🔥', strength: 82, color: 'red' },
-  { name: 'Shadow Wave', icon: '🌑', strength: 76, color: 'purple' },
-  { name: 'Solar Burst', icon: '☀️', strength: 88, color: 'gold' },
-  { name: 'Wind Cutter', icon: '🌪️', strength: 72, color: 'cyan' },
-  { name: 'Meteor Smash', icon: '☄️', strength: 85, color: 'orange' },
-  { name: 'Crystal Guard', icon: '💎', strength: 69, color: 'ice' },
-  { name: 'Phoenix Fire', icon: '🪽', strength: 80, color: 'red' },
-]
-
-const shuffle = <T,>(items: T[]): T[] => {
-  const result = [...items]
-
-  for (let i = result.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1))
-    ;[result[i], result[j]] = [result[j], result[i]]
-  }
-
-  return result
-}
-
+const shuffle = <T,>(items: T[]) => [...items].sort(() => Math.random() - 0.5)
 const makeHero = (side: Side, previous?: string): Hero => {
-  const available = heroNames.filter(
-    hero => hero.side === side && hero.name !== previous
-  )
-
-  const picked =
-    available[Math.floor(Math.random() * available.length)] ||
-    heroNames.find(hero => hero.side === side)!
-
-  const powers = shuffle(side === 'blue' ? bluePowers : redPowers)
-    .slice(0, 5)
-    .map(power => ({ ...power }))
-
-  return {
-    id: `${side}-${Math.random().toString(36).slice(2, 8)}`,
-    name: picked.name,
-    side,
-    powers,
-  }
+  const choices = heroOptions[side].filter(item => item.name !== previous)
+  const picked = choices[Math.floor(Math.random() * choices.length)] || heroOptions[side][0]
+  return { id: `${side}-${Math.random().toString(36).slice(2)}`, name: picked.name, side, image: picked.image, powers: shuffle(powerPool[side]).slice(0, 5) }
 }
-
-const shuffledPowers = (hero: Hero): Power[] => shuffle(hero.powers)
+const shuffledFive = (hero: Hero) => shuffle(hero.powers)
 
 export default function SuperheroClash({ onExit, onWin }: Props) {
   const [stage, setStage] = useState<Stage>('intro')
-
   const [blue, setBlue] = useState<Hero>(() => makeHero('blue'))
   const [red, setRed] = useState<Hero>(() => makeHero('red'))
-
   const [blueName, setBlueName] = useState(blue.name)
   const [redName, setRedName] = useState(red.name)
-
   const [blueHp, setBlueHp] = useState(100)
   const [redHp, setRedHp] = useState(100)
-
-  const [seconds, setSeconds] = useState(60)
   const [round, setRound] = useState(1)
-
+  const [bluePicks, setBluePicks] = useState<Power[]>(() => shuffledFive(blue))
+  const [redPicks, setRedPicks] = useState<Power[]>(() => shuffledFive(red))
   const [blueChoice, setBlueChoice] = useState<number | null>(null)
   const [redChoice, setRedChoice] = useState<number | null>(null)
-
-  const [blueRoundPowers, setBlueRoundPowers] = useState<Power[]>(
-    () => shuffledPowers(blue)
-  )
-
-  const [redRoundPowers, setRedRoundPowers] = useState<Power[]>(
-    () => shuffledPowers(red)
-  )
-
-  const [battleMessage, setBattleMessage] = useState(
-    'Choose your secret powers!'
-  )
-
+  const [turn, setTurn] = useState<Side>('blue')
+  const [attacking, setAttacking] = useState(false)
+  const [hitSide, setHitSide] = useState<Side | null>(null)
+  const [battleMessage, setBattleMessage] = useState('PLAYER 1 — CHOOSE YOUR POWER')
   const [battleLog, setBattleLog] = useState('')
   const [winner, setWinner] = useState<Hero | null>(null)
-  const [attacking, setAttacking] = useState(false)
-  const [roundDone, setRoundDone] = useState(false)
+  const [blueUsed, setBlueUsed] = useState<number[]>([])
+  const [redUsed, setRedUsed] = useState<number[]>([])
 
-  const [damage, setDamage] = useState({
-    blue: 0,
-    red: 0,
-  })
 
-  useEffect(() => {
-    if (stage !== 'battle' || winner) return
-
-    const timer = window.setInterval(() => {
-      setSeconds(value => Math.max(0, value - 1))
-    }, 1000)
-
-    return () => window.clearInterval(timer)
-  }, [stage, winner])
-
-  useEffect(() => {
-    if (stage !== 'battle' || seconds > 0 || winner) return
-
-    const finalWinner =
-      blueHp === redHp ? null : blueHp > redHp ? blue : red
-
-    setWinner(finalWinner)
-    setStage('result')
-
-    if (finalWinner) onWin?.()
-  }, [seconds, stage, winner, blueHp, redHp, blue, red, onWin])
-
-  const freshMatch = () => {
-    const nextBlue = makeHero('blue', blue.name)
-    const nextRed = makeHero('red', red.name)
-
-    setBlue(nextBlue)
-    setRed(nextRed)
-
-    setBlueName(nextBlue.name)
-    setRedName(nextRed.name)
-
-    setBlueHp(100)
-    setRedHp(100)
-
-    setSeconds(60)
-    setRound(1)
-
-    setBlueChoice(null)
-    setRedChoice(null)
-
-    setBlueRoundPowers(shuffledPowers(nextBlue))
-    setRedRoundPowers(shuffledPowers(nextRed))
-
-    setBattleMessage('Choose your secret powers!')
-    setBattleLog('')
-
-    setWinner(null)
-    setAttacking(false)
-    setRoundDone(false)
-
-    setDamage({ blue: 0, red: 0 })
-
-    setStage('intro')
+  const randomizeHero = (side: Side) => {
+    if (side === 'blue') { const next = makeHero('blue', blue.name); setBlue(next); setBlueName(next.name) }
+    else { const next = makeHero('red', red.name); setRed(next); setRedName(next.name) }
   }
-
-  const startShowcase = () => {
-    const updatedBlue = {
-      ...blue,
-      name: blueName.trim() || 'Blue Hero',
-    }
-
-    const updatedRed = {
-      ...red,
-      name: redName.trim() || 'Red Hero',
-    }
-
-    setBlue(updatedBlue)
-    setRed(updatedRed)
-
-    setStage('powers')
+  const beginShowcase = () => {
+    setBlue(h => ({ ...h, name: blueName.trim() || 'Player 1 Hero' }))
+    setRed(h => ({ ...h, name: redName.trim() || 'Player 2 Hero' }))
+    setStage('showcase')
   }
-
-  const startBattle = () => {
-    setBlueRoundPowers(shuffledPowers(blue))
-    setRedRoundPowers(shuffledPowers(red))
-
-    setBlueChoice(null)
-    setRedChoice(null)
-
-    setRoundDone(false)
-    setBattleMessage('Both players: choose one power!')
-
-    setSeconds(60)
+  const beginBattle = () => {
+    setBluePicks(shuffledFive(blue)); setRedPicks(shuffledFive(red))
+    setBlueChoice(null); setRedChoice(null); setBlueUsed([]); setRedUsed([])
+    setTurn('blue'); setBattleMessage('PLAYER 1 — CHOOSE YOUR POWER'); setBattleLog('')
     setStage('battle')
   }
-
-  const resolveRound = () => {
-    if (
-      blueChoice === null ||
-      redChoice === null ||
-      attacking ||
-      roundDone
-    ) {
-      return
-    }
-
-    setAttacking(true)
-    setBattleMessage('SUPERPOWER CLASH!')
-
-    const bluePower = blueRoundPowers[blueChoice]
-    const redPower = redRoundPowers[redChoice]
-
-    const blueScore =
-      bluePower.strength + Math.floor(Math.random() * 30)
-
-    const redScore =
-      redPower.strength + Math.floor(Math.random() * 30)
-
+  const choosePower = (side: Side, index: number) => {
+    if (attacking || (side === 'blue' && (blueChoice !== null || blueUsed.includes(index))) || (side === 'red' && (redChoice !== null || redUsed.includes(index)))) return
+    if (side === 'blue') { setBlueChoice(index); setTurn('red'); setBattleMessage('PLAYER 2 — CHOOSE YOUR POWER') }
+    else { setRedChoice(index); setBattleMessage('BOTH POWERS LOCKED — RELEASE THE ATTACK!') }
+  }
+  const releaseAttack = () => {
+    if (blueChoice === null || redChoice === null || attacking) return
+    const bp = bluePicks[blueChoice]
+    const rp = redPicks[redChoice]
+    const blueScore = bp.strength + Math.floor(Math.random() * 24)
+    const redScore = rp.strength + Math.floor(Math.random() * 24)
+    const victor: Side = blueScore >= redScore ? 'blue' : 'red'
+    const damage = 15 + Math.floor(Math.random() * 6)
+    setAttacking(true); setHitSide(victor === 'blue' ? 'red' : 'blue')
+    setBattleMessage('SUPERPOWER COLLISION!')
     window.setTimeout(() => {
-      if (blueScore === redScore) {
-        setBattleLog(
-          `${bluePower.name} and ${redPower.name} collide — it's a draw!`
-        )
-
-        setBattleMessage('DRAW! No damage this round.')
-        setDamage({ blue: 0, red: 0 })
-      } else if (blueScore > redScore) {
-        const hit = 15 + Math.floor(Math.random() * 6)
-        const nextHealth = Math.max(0, redHp - hit)
-
-        setRedHp(nextHealth)
-        setDamage({ blue: 0, red: hit })
-
-        setBattleLog(
-          `${blue.name} wins the clash with ${bluePower.name}! ${red.name} takes ${hit}% damage.`
-        )
-
-        setBattleMessage(`${blue.name.toUpperCase()} POWER WINS!`)
-
-        if (nextHealth <= 0) {
-          setWinner(blue)
-          setStage('result')
-          onWin?.()
-        }
+      if (victor === 'blue') {
+        const next = Math.max(0, redHp - damage); setRedHp(next)
+        setBattleLog(`${blue.name}'s ${bp.name} overpowers ${red.name}'s ${rp.name}. ${red.name} loses ${damage}% energy.`)
+        setBattleMessage(`${blue.name.toUpperCase()} WINS THIS ROUND!`)
+        if (next === 0) { setWinner(blue); setStage('result'); onWin?.() }
       } else {
-        const hit = 15 + Math.floor(Math.random() * 6)
-        const nextHealth = Math.max(0, blueHp - hit)
-
-        setBlueHp(nextHealth)
-        setDamage({ blue: hit, red: 0 })
-
-        setBattleLog(
-          `${red.name} wins the clash with ${redPower.name}! ${blue.name} takes ${hit}% damage.`
-        )
-
-        setBattleMessage(`${red.name.toUpperCase()} POWER WINS!`)
-
-        if (nextHealth <= 0) {
-          setWinner(red)
-          setStage('result')
-          onWin?.()
-        }
+        const next = Math.max(0, blueHp - damage); setBlueHp(next)
+        setBattleLog(`${red.name}'s ${rp.name} overpowers ${blue.name}'s ${bp.name}. ${blue.name} loses ${damage}% energy.`)
+        setBattleMessage(`${red.name.toUpperCase()} WINS THIS ROUND!`)
+        if (next === 0) { setWinner(red); setStage('result'); onWin?.() }
       }
-
-      setAttacking(false)
-      setRoundDone(true)
-    }, 1500)
+      setBlueUsed(v => [...v, blueChoice]); setRedUsed(v => [...v, redChoice])
+      setAttacking(false); setHitSide(null)
+      setBlueChoice(null); setRedChoice(null)
+    }, 1350)
   }
-
   const nextRound = () => {
-    if (stage !== 'battle' || winner) return
-
-    setRound(value => value + 1)
-
-    setBlueChoice(null)
-    setRedChoice(null)
-
-    setRoundDone(false)
-    setDamage({ blue: 0, red: 0 })
-
-    setBlueRoundPowers(shuffledPowers(blue))
-    setRedRoundPowers(shuffledPowers(red))
-
-    setBattleMessage(
-      'New round! Choose again — powers have been shuffled.'
-    )
-
-    setBattleLog('')
+    setRound(v => v + 1)
+    // Every round gets a fresh random ordering and a fresh five-power selection.
+    setBluePicks(shuffledFive({ ...blue, powers: shuffle(powerPool.blue).slice(0, 5) }))
+    setRedPicks(shuffledFive({ ...red, powers: shuffle(powerPool.red).slice(0, 5) }))
+    setBlueUsed([]); setRedUsed([]); setBlueChoice(null); setRedChoice(null)
+    setTurn('blue'); setBattleLog(''); setBattleMessage('NEW ROUND — PLAYER 1 CHOOSE FIRST')
   }
-
-  const portrait = (side: Side) => (
-    <div className={`sc-hero-portrait ${side}`}>
-      <div className="sc-hero-glow" />
-      <div className="sc-hero-art" />
-      <span className="sc-hero-caption">
-        {side === 'blue' ? 'BLUE HERO' : 'RED HERO'}
-      </span>
-    </div>
+  const restart = () => {
+    const nextBlue = makeHero('blue', blue.name); const nextRed = makeHero('red', red.name)
+    setBlue(nextBlue); setRed(nextRed); setBlueName(nextBlue.name); setRedName(nextRed.name)
+    setBlueHp(100); setRedHp(100); setRound(1); setWinner(null); setBlueUsed([]); setRedUsed([])
+    setBluePicks(shuffledFive(nextBlue)); setRedPicks(shuffledFive(nextRed))
+    setBlueChoice(null); setRedChoice(null); setTurn('blue'); setBattleLog(''); setStage('intro')
+  }
+  const heroPanel = (hero: Hero, hp: number, side: Side, choice: number | null, used: number[]) => (
+    <section className={`gsh-player gsh-${side} ${hitSide === side ? 'gsh-hit' : ''}`}>
+      <div className="gsh-player-head"><span>{side === 'blue' ? 'PLAYER 1' : 'PLAYER 2'}</span><strong>{hero.name}</strong><div className="gsh-health"><i style={{ width: `${hp}%` }}/><b>{hp}%</b></div></div>
+      <div className="gsh-character-wrap"><img className="gsh-character" src={hero.image} alt={`${hero.name} hero`}/><div className="gsh-character-aura"/></div>
+      <div className="gsh-power-label">{choice === null ? (side === turn ? 'CHOOSE A POWER' : 'WAIT FOR YOUR TURN') : 'POWER LOCKED'}</div>
+      <div className="gsh-power-buttons">{[0,1,2,3,4].map(n => <button key={n} disabled={choice !== null || used.includes(n) || attacking || (side !== turn && choice === null)} className={`${choice === n ? 'selected' : ''} ${used.includes(n) ? 'used' : ''}`} onClick={() => choosePower(side, n)}><span>{n + 1}</span></button>)}</div>
+    </section>
   )
 
-  const health = (value: number) => (
-    <div className="sc-health-track">
-      <div
-        className="sc-health-fill"
-        style={{ width: `${value}%` }}
-      />
-      <b>{value}%</b>
-    </div>
-  )
-
-  return (
-    <div className="sc-page">
-      <button className="sc-back" onClick={onExit}>
-        <ArrowLeft size={17} />
-        Back to Dashboard
-      </button>
-
-      {stage === 'intro' && (
-        <>
-          <div className="sc-intro-poster">
-            <img
-              src="/images/superhero-clash-poster.png"
-              alt="Superhero Clash Punjabi Arena"
-            />
-
-            <button
-              className="sc-play-poster"
-              onClick={startShowcase}
-            >
-              ⚔ PLAY NOW
-            </button>
-          </div>
-
-          <div className="sc-setup-panel">
-            <div className="sc-panel-heading">
-              <Swords />
-              <h2>CREATE YOUR HEROES</h2>
-            </div>
-
-            <div className="sc-hero-edit-grid">
-              <div className="sc-hero-edit blue-edit">
-                {portrait('blue')}
-
-                <label>
-                  PLAYER 1 NAME
-                  <input
-                    value={blueName}
-                    maxLength={22}
-                    onChange={event => setBlueName(event.target.value)}
-                  />
-                </label>
-
-                <button
-                  onClick={() => {
-                    const hero = makeHero('blue', blue.name)
-                    setBlue(hero)
-                    setBlueName(hero.name)
-                  }}
-                >
-                  <RefreshCw size={15} />
-                  Random hero
-                </button>
-              </div>
-
-              <div className="sc-vs-mark">VS</div>
-
-              <div className="sc-hero-edit red-edit">
-                {portrait('red')}
-
-                <label>
-                  PLAYER 2 NAME
-                  <input
-                    value={redName}
-                    maxLength={22}
-                    onChange={event => setRedName(event.target.value)}
-                  />
-                </label>
-
-                <button
-                  onClick={() => {
-                    const hero = makeHero('red', red.name)
-                    setRed(hero)
-                    setRedName(hero.name)
-                  }}
-                >
-                  <RefreshCw size={15} />
-                  Random hero
-                </button>
-              </div>
-            </div>
-
-            <button className="sc-primary" onClick={startShowcase}>
-              NEXT <span>➜</span>
-            </button>
-          </div>
-        </>
-      )}
-
-      {stage === 'powers' && (
-        <div className="sc-setup-panel sc-powers-panel">
-          <div className="sc-panel-heading">
-            <Zap />
-            <h2>YOUR FIVE SUPERPOWERS</h2>
-          </div>
-
-          <div className="sc-power-showcase">
-            {[blue, red].map(hero => (
-              <div
-                className={`sc-power-side ${hero.side}`}
-                key={hero.id}
-              >
-                <h3>{hero.name}</h3>
-
-                {hero.powers.map((power, index) => (
-                  <div className="sc-power-preview" key={power.name}>
-                    <span>{power.icon}</span>
-                    <b>
-                      {index + 1}. {power.name}
-                    </b>
-                  </div>
-                ))}
-              </div>
-            ))}
-          </div>
-
-          <p className="sc-hide-note">
-            Memorise your powers! They will be hidden when the battle begins.
-          </p>
-
-          <button className="sc-primary" onClick={startBattle}>
-            START BATTLE <Swords size={18} />
-          </button>
-        </div>
-      )}
-
-      {stage === 'battle' && (
-        <>
-          <div className="sc-battle-top">
-            <div>
-              <span>ROUND</span>
-              <b>{round}</b>
-            </div>
-
-            <div className="sc-clock">
-              <Clock3 />
-              {`00:${String(seconds).padStart(2, '0')}`}
-            </div>
-
-            <div>
-              <span>1 VS 1</span>
-              <b>POWER CLASH</b>
-            </div>
-          </div>
-
-          <div
-            className={`sc-battle-arena ${
-              attacking ? 'is-attacking' : ''
-            } ${roundDone ? 'round-done' : ''}`}
-          >
-            <section className="sc-fighter blue-fighter">
-              <div className="sc-fighter-name">{blue.name}</div>
-
-              {portrait('blue')}
-
-              {health(blueHp)}
-
-              <div className="sc-number-powers">
-                {[1, 2, 3, 4, 5].map(number => (
-                  <button
-                    key={number}
-                    disabled={blueChoice !== null || roundDone}
-                    className={
-                      blueChoice === number - 1 ? 'chosen' : ''
-                    }
-                    onClick={() => setBlueChoice(number - 1)}
-                  >
-                    {number}
-                  </button>
-                ))}
-              </div>
-
-              <small>
-                {blueChoice === null
-                  ? 'PLAYER 1 · PICK A POWER'
-                  : 'POWER SELECTED'}
-              </small>
-            </section>
-
-            <div className="sc-battle-center">
-              <div className="sc-energy-line" />
-
-              {attacking &&
-                blueChoice !== null &&
-                redChoice !== null && (
-                  <div className="sc-attack-burst">
-                    <span>{blueRoundPowers[blueChoice].icon}</span>
-                    <b>⚡</b>
-                    <span>{redRoundPowers[redChoice].icon}</span>
-                  </div>
-                )}
-
-              <div className="sc-vs-core">VS</div>
-
-              <div className="sc-battle-message">
-                {battleMessage}
-              </div>
-
-              {blueChoice !== null &&
-                redChoice !== null &&
-                !roundDone && (
-                  <button
-                    className="sc-attack-button"
-                    onClick={resolveRound}
-                    disabled={attacking}
-                  >
-                    {attacking ? 'ATTACKING…' : '⚡ RELEASE ATTACK'}
-                  </button>
-                )}
-
-              {roundDone && (
-                <>
-                  <div className="sc-result-powers">
-                    <span>
-                      {blueRoundPowers[blueChoice!].icon}{' '}
-                      {blueRoundPowers[blueChoice!].name}
-                    </span>
-
-                    <b>VS</b>
-
-                    <span>
-                      {redRoundPowers[redChoice!].icon}{' '}
-                      {redRoundPowers[redChoice!].name}
-                    </span>
-                  </div>
-
-                  <p className="sc-round-log">{battleLog}</p>
-
-                  <button
-                    className="sc-next-round"
-                    onClick={nextRound}
-                  >
-                    NEXT ROUND <span>➜</span>
-                  </button>
-                </>
-              )}
-            </div>
-
-            <section className="sc-fighter red-fighter">
-              <div className="sc-fighter-name">{red.name}</div>
-
-              {portrait('red')}
-
-              {health(redHp)}
-
-              <div className="sc-number-powers">
-                {[1, 2, 3, 4, 5].map(number => (
-                  <button
-                    key={number}
-                    disabled={redChoice !== null || roundDone}
-                    className={
-                      redChoice === number - 1 ? 'chosen' : ''
-                    }
-                    onClick={() => setRedChoice(number - 1)}
-                  >
-                    {number}
-                  </button>
-                ))}
-              </div>
-
-              <small>
-                {redChoice === null
-                  ? 'PLAYER 2 · PICK A POWER'
-                  : 'POWER SELECTED'}
-              </small>
-            </section>
-          </div>
-
-          <div className="sc-battle-hint">
-            Both players use this same screen. Choose your numbers,
-            then release the attack together.
-          </div>
-        </>
-      )}
-
-      {stage === 'result' && (
-        <div className="sc-winner-screen">
-          <div className="sc-confetti">✦ ✧ ★ ✦ ✧ ★ ✦</div>
-
-          <Trophy size={66} />
-
-          <div className="sc-winner-label">ARENA CHAMPION</div>
-
-          <h1>
-            {winner
-              ? winner.name
-              : blueHp === redHp
-                ? 'IT’S A DRAW!'
-                : blueHp > redHp
-                  ? blue.name
-                  : red.name}
-          </h1>
-
-          <h2>{winner ? 'WINS THE GAME!' : 'TIME IS UP!'}</h2>
-
-          <div className="sc-final-scores">
-            <div>
-              🔵 {blue.name}
-              <b>{blueHp}%</b>
-            </div>
-
-            <div>
-              🔴 {red.name}
-              <b>{redHp}%</b>
-            </div>
-          </div>
-
-          <button className="sc-primary" onClick={freshMatch}>
-            <RefreshCw /> PLAY AGAIN
-          </button>
-
-          <button className="sc-back-bottom" onClick={onExit}>
-            BACK TO DASHBOARD
-          </button>
-        </div>
-      )}
-    </div>
-  )
+  return <div className="gsh-screen">
+    <div className="gsh-back-row"><button onClick={onExit}><ArrowLeft size={17}/> EXIT ARENA</button><div className="gsh-brand"><Crown size={18}/> GLOBAL SUPER HERO</div><span className="gsh-round-tag">{stage === 'battle' ? `ROUND ${round}` : '1 VS 1 ARENA'}</span></div>
+    {stage === 'intro' && <div className="gsh-intro">
+      <div className="gsh-poster"><img src="/images/global-super-hero-poster.png" alt="GLOBAL SUPER HERO — Punjabi Game Arena"/><button onClick={beginShowcase}>ENTER THE ARENA <Swords size={19}/></button></div>
+      <div className="gsh-create"><div className="gsh-section-title">CREATE YOUR CHAMPIONS</div><div className="gsh-edit-grid">
+        {[{side:'blue' as Side, hero:blue, name:blueName, setName:setBlueName},{side:'red' as Side, hero:red, name:redName, setName:setRedName}].map(({side,hero,name,setName}) => <div className={`gsh-edit-card gsh-edit-${side}`} key={side}><img src={hero.image} alt={hero.name}/><label>{side === 'blue' ? 'PLAYER 1 NAME' : 'PLAYER 2 NAME'}<input value={name} maxLength={22} onChange={e => setName(e.target.value)}/></label><button onClick={() => randomizeHero(side)}><RefreshCw size={14}/> SHUFFLE HERO</button></div>)}
+      </div><button className="gsh-primary" onClick={beginShowcase}>SHOW SUPERPOWERS <Zap size={18}/></button></div>
+    </div>}
+    {stage === 'showcase' && <div className="gsh-showcase"><div className="gsh-section-title">YOUR FIVE SUPERPOWERS</div><div className="gsh-showcase-grid">{[blue,red].map(hero => <div className={`gsh-showcase-side gsh-showcase-${hero.side}`} key={hero.id}><img src={hero.image} alt={hero.name}/><h2>{hero.name}</h2><div>{hero.powers.map((p,i)=><div className="gsh-power-preview" key={p.name}><b>{i+1}</b><span>{p.symbol}</span><strong>{p.name}</strong><small>POWER {p.strength}</small></div>)}</div></div>)}</div><p>Remember your powers. They disappear when the battle begins.</p><button className="gsh-primary" onClick={beginBattle}>START THE BATTLE <Swords size={18}/></button></div>}
+    {stage === 'battle' && <div className={`gsh-battle ${attacking ? 'gsh-attacking' : ''}`}>
+      <div className="gsh-arena-backdrop"/>
+      {heroPanel(blue,blueHp,'blue',blueChoice,blueUsed)}
+      <div className="gsh-middle"><div className="gsh-vs">VS</div><div className="gsh-beam gsh-beam-blue"/><div className="gsh-beam gsh-beam-red"/><div className="gsh-impact">✦</div><div className="gsh-message">{battleMessage}</div>{blueChoice !== null && redChoice !== null && <button className="gsh-release" onClick={releaseAttack} disabled={attacking}>{attacking ? 'ATTACK IN PROGRESS…' : 'RELEASE ATTACK'}</button>}{battleLog && <p className="gsh-log">{battleLog}</p>}{!attacking && blueChoice === null && redChoice === null && <span className="gsh-turn-note">PLAYER 1 CHOOSES FIRST</span>}{!attacking && blueChoice !== null && redChoice === null && <span className="gsh-turn-note">PASS THE DEVICE TO PLAYER 2</span>}
+        {battleLog && blueHp > 0 && redHp > 0 && <button className="gsh-next" onClick={nextRound}>NEXT ROUND <Zap size={16}/></button>}
+      </div>
+      {heroPanel(red,redHp,'red',redChoice,redUsed)}
+    </div>}
+    {stage === 'result' && <div className="gsh-winner"><div className="gsh-confetti">✦ ✧ ★ ✦ ✧ ★ ✦</div><Trophy size={70}/><span>ARENA CHAMPION</span><h1>{winner?.name}</h1><h2>WINS THE GAME!</h2><div className="gsh-score-row"><b>{blue.name} <strong>{blueHp}%</strong></b><b>{red.name} <strong>{redHp}%</strong></b></div><button className="gsh-primary" onClick={restart}><RefreshCw size={18}/> PLAY AGAIN</button><button className="gsh-exit" onClick={onExit}>BACK TO DASHBOARD</button></div>}
+  </div>
 }
