@@ -86,3 +86,8 @@ node scripts/validate-content.mjs content/question-bank-starter.json
 
 ## Security warning
 Never place a Supabase `service_role` key in frontend code or any `VITE_` variable. Only the anon/publishable key belongs in the browser. Service-role keys belong in Supabase Edge Function secrets.
+
+
+## Real-time 3D fighting mode
+
+The Global Super Hero activity now includes a real-time 2-player side-view 3D battle. Controls: Player 1 uses A/D, W, F/G/H; Player 2 uses Left/Right, Up, J/K/L. See `docs/FIGHTING_GAME_UPGRADE.md` for the full control map and limitations.

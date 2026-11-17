@@ -1,18 +1,31 @@
-# Global Super Hero — Real-time 3D battle upgrade
+# Global Super Hero — real-time 3D two-player fighting mode
 
-This update preserves the existing game flow: create two custom-named heroes, preview five powers for each, Player 1 selects one numbered power (1–5), Player 2 selects one numbered power (1–5), then the players release the attack. Power strength affects the winner and damage. Health reaches zero to end the match.
+The Global Super Hero mode now uses a live side-view 3D arena with two keyboard-controlled fighters. It replaces the previous turn-based power-selection/clash flow.
 
-## What changed
-- Replaced the old static-image battle panel and brief shake effect with a live Three.js 3D arena.
-- Added procedural 3D armored fighters, an arena floor/rings, skyline, lighting, shadows, idle motion, attack lunges, energy projectiles, collision particles, hit recoil/fall animation, and recovery.
-- The chosen power names and colors are carried into the battle scene; fire, solar, frost, shadow, cosmic, shield, and gravity powers have distinct projectile colors.
-- Kept custom hero names, five numbered choices, sequential player turns, health, round progression, and winner screen.
+## Player controls
+
+| Action | Player 1 (blue) | Player 2 (red) |
+|---|---|---|
+| Move left/right | A / D | Left / Right arrows |
+| Jump | W | Up arrow |
+| Punch | F | J |
+| Kick | G | K |
+| Special power | H | L |
+| Pause / resume | Esc | Esc |
+
+## Combat features
+- Procedurally modeled 3D armored humanoid fighters with separate torso, head, arms, forearms, legs, boots, armor plates, masks, hair/helmet details, shoulder pieces and capes.
+- Side-on fighting camera, 3D arena floor, ring markings, futuristic skyline, lighting, shadows and colored energy pylons.
+- Real-time movement, jumping, gravity, punch and kick animations, close-range hit checks, damage, hit stun, knockback, airborne reactions and landing.
+- Special energy projectiles with impact particles and knockback. Energy recharges over time; special attacks consume 35 energy.
+- Health bars, energy meters, match timer, pause overlay and winner result.
+- Character names and hero choices remain editable in the existing Global Punjabi Game Arena.
 
 ## Runtime requirement
-The Three.js ES module is loaded from jsDelivr in `index.html` (Three.js 0.160.0). The deployed site therefore needs internet access to load that CDN module. If it does not load, the arena shows an engine-load message rather than a functioning 3D scene.
+Three.js 0.160.0 is loaded as an ES module from jsDelivr by `index.html`. The deployed site therefore needs internet access to load this CDN module. If it does not load, the arena displays an engine-load message.
 
-## Important asset limitation
-The fighters in this first playable upgrade are procedurally assembled 3D armored characters, not detailed, professionally rigged hero models. Their combat animation is driven by the scene code. For a premium Tekken-level finish, replace these procedural fighters with licensed/custom GLB/GLTF characters that include skeletal rigs and punch, kick, block, hit, knockdown, and recovery animation clips. The existing 2D hero images remain the selection portraits.
+## Model / animation limitation
+The fighters are procedural 3D models built from Three.js geometry and animated through articulated scene groups. They are not licensed AAA character assets or professionally motion-captured skeletal GLB/GLTF characters. The battle is playable and interactive, but a premium commercial fighting-game finish would require custom rigged character models, animation clips, and additional hitbox/animation polish.
 
 ## Deploy
-Commit the changed files to GitHub and let Netlify redeploy. No Supabase migration or database change is needed for this front-end battle upgrade.
+Commit the changed files to GitHub and let Netlify redeploy. No Supabase migration or database change is required for this front-end fighting-mode update.
