@@ -1,21 +1,32 @@
-GLOBAL PUNJABI CLASSES — ARENA VISUAL UPDATE
+GLOBAL PUNJABI CLASSES — ARENA 12-POINT UPDATE
 
-This update changes the Global Super Hero arena UI and battle visuals:
-- Bright white / sky-blue interface and arena presentation.
-- Larger hero portraits on the champion selection screen.
-- Editable Player 1 and Player 2 names (up to 18 characters).
-- Player name labels removed from beneath the fighters during battle.
-- Generated transparent character power artwork added for blue water, lightning and shield attacks, and red fire and shield attacks.
-- Power artwork is used during the clash animation; other power types retain the existing animated effects.
-- Loser reaction and fall positions are kept inside the arena frame and point outward toward their own side.
-- Larger dashboard featured-game artwork.
+This ZIP applies the requested arena and dashboard changes:
+
+1. Both fighters now start from their upright idle sprites. Falling is reserved for a final knockout.
+2. Attacks use full-body punch/kick sprites with separate elemental effects layered in front of the fighters.
+3. Fighter wrappers and images have transparent backgrounds; the unwanted blue rectangular panel is removed.
+4. The dashboard poster uses contain-fit sizing so the complete artwork is visible instead of cropped.
+5. Champion selection has been redesigned with distinct blue/red frames, larger full-body characters, clearer player fields and stronger selection buttons.
+6. Selection and game screens use viewport-height layouts with compact controls to avoid page scrolling on typical desktop and mobile viewport sizes.
+7. Detached decorative fragments were removed from fighter sprites; each sprite shows one fighter/action only.
+8. Attack animations translate the fighter but do not scale the character. The same fighter container dimensions are retained throughout attacks.
+9. The arena has a more visible multi-colour frame while keeping the bright arena background.
+10. Fighter areas are separated on opposite sides; HUD, effects and controls have dedicated layout areas to prevent unintended overlap.
+11. Blue faces/attacks toward the right and red faces/attacks toward the left. Knockout falls point outward toward each fighter's own side.
+12. Power winner/loser wording is not displayed. The centre clash label is the smaller “CLASH!” only.
+
+Files changed:
+- src/components/SuperheroClash.tsx
+- src/style.css
+- public/images/fighters/{blue,red}-{idle,punch,kick,hurt,down}.png (detached-art cleanup)
 
 Deployment:
 1. Extract this ZIP.
-2. Upload/replace the project files in the existing GitHub repository (or commit these changes locally).
-3. Push/commit the changes. Netlify should redeploy automatically if connected to that repository.
+2. Upload/replace these project files in the existing GitHub repository and commit/push.
+3. Netlify should redeploy automatically when connected to that repository.
 4. No new Supabase migration or secret is required for these visual/UI changes.
 
-Validation:
-- TypeScript/TSX syntax transpilation passed for the edited App.tsx and SuperheroClash.tsx.
-- A full npm production build was not run in this environment. Run `npm install` then `npm run build` before production release if your environment has dependencies installed.
+Validation notes:
+- ZIP archive integrity is checked.
+- The TypeScript compiler could not complete because npm dependencies were unavailable in this environment; npm install timed out. No full production build or live browser/device test is claimed.
+- After extracting in your local project, run: npm install && npm run build
