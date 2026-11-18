@@ -96,19 +96,19 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
   const resolve = () => {
     if (!bluePower || !redPower) return
     setPhase('clash'); setClashId(v => v + 1)
-    const bRoll = bluePower.strength * (0.82 + Math.random() * 0.36)
-    const rRoll = redPower.strength * (0.82 + Math.random() * 0.36)
-    const bWins = bRoll >= rRoll
-    const damage = Math.max(8, Math.min(25, Math.round(Math.abs(bRoll - rRoll) * 0.48 + 9)))
-    const blueDamage = bWins ? 0 : (redPower.type === 'SHIELD' ? Math.max(3, Math.round(damage * .28)) : damage)
-    const redDamage = bWins ? (bluePower.type === 'SHIELD' ? Math.max(3, Math.round(damage * .28)) : damage) : 0
+    // Both selected powers are released in the same round. Each projectile
+    // reaches the opposite fighter, so both players can take damage together.
+    const rawBlueHit = Math.round(8 + bluePower.strength * 0.11)
+    const rawRedHit = Math.round(8 + redPower.strength * 0.11)
+    const blueDamage = redPower.type === 'SHIELD' ? Math.max(2, Math.round(rawBlueHit * 0.28)) : rawBlueHit
+    const redDamage = bluePower.type === 'SHIELD' ? Math.max(2, Math.round(rawRedHit * 0.28)) : rawRedHit
     const blueHeal = bluePower.type === 'HEAL' ? 12 : 0
     const redHeal = redPower.type === 'HEAL' ? 12 : 0
     const nextBlue = Math.min(100, Math.max(0, blueHealth - blueDamage + blueHeal))
     const nextRed = Math.min(100, Math.max(0, redHealth - redDamage + redHeal))
-    setImpactSide(bWins ? 'red' : 'blue')
-    setBlueReaction(nextBlue <= 0 ? 'fall' : bWins ? 'guard' : randomReaction())
-    setRedReaction(nextRed <= 0 ? 'fall' : bWins ? randomReaction() : 'guard')
+    setImpactSide(null)
+    setBlueReaction(nextBlue <= 0 ? 'fall' : redPower.type === 'SHIELD' || bluePower.type === 'HEAL' ? 'guard' : randomReaction())
+    setRedReaction(nextRed <= 0 ? 'fall' : bluePower.type === 'SHIELD' || redPower.type === 'HEAL' ? 'guard' : randomReaction())
     window.setTimeout(() => {
       setBlueHealth(nextBlue); setRedHealth(nextRed)
       if (nextBlue <= 0 || nextRed <= 0) { const winSide: Side = nextBlue > nextRed ? 'blue' : 'red'; setWinner(winSide); setPhase('finished'); onWin?.() }
@@ -145,12 +145,12 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
         {phase === 'clash' && <>
           <PowerBlast side="blue" power={bluePower} />
           <PowerBlast side="red" power={redPower} />
-          <div className="gc-impact"><i/><b>CLASH!</b><i/></div>
+          <div className="gc-impact"><i/><b>HIT</b><i/></div>
         </>}
-        <div className={`gc-fighter blue ${phase === 'clash' ? `blue-attack pose-${poseForPower(bluePower)}` : phase === 'result' && impactSide === 'blue' ? `blue-${blueReaction}` : phase === 'finished' && winner === 'red' ? 'blue-fall' : ''}`}>
+        <div className={`gc-fighter blue ${phase === 'clash' ? `blue-attack pose-${poseForPower(bluePower)}` : phase === 'result' ? `blue-${blueReaction}` : phase === 'finished' && winner === 'red' ? 'blue-fall' : ''}`}>
           <img src={fighterImage('blue', bluePower, blueReaction, phase === 'clash')} alt={`${blueDisplayName} fighter action`} />
         </div>
-        <div className={`gc-fighter red ${phase === 'clash' ? `red-attack pose-${poseForPower(redPower)}` : phase === 'result' && impactSide === 'red' ? `red-${redReaction}` : phase === 'finished' && winner === 'blue' ? 'red-fall' : ''}`}>
+        <div className={`gc-fighter red ${phase === 'clash' ? `red-attack pose-${poseForPower(redPower)}` : phase === 'result' ? `red-${redReaction}` : phase === 'finished' && winner === 'blue' ? 'red-fall' : ''}`}>
           <img src={fighterImage('red', redPower, redReaction, phase === 'clash')} alt={`${redDisplayName} fighter action`} />
         </div>
         {(phase === 'result' || phase === 'finished') && <div className="gc-result-banner"><strong>{phase === 'finished' ? `${winner === 'blue' ? blueDisplayName : redDisplayName} WINS!` : 'ROUND COMPLETE'}</strong><span>{phase === 'finished' ? 'ARENA CHAMPION' : 'CHOOSE AGAIN'}</span></div>}
@@ -188,7 +188,7 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
 function PowerPicker({ side, powers, selected, active, locked, onChoose }: { side: Side; powers: Power[]; selected: number | null; active: boolean; locked: boolean; onChoose: (i: number) => void }) {
   return <div className={`gc-picker ${side} ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}>
     <div className="gc-picker-head"><strong>{side === 'blue' ? 'PLAYER 1' : 'PLAYER 2'}</strong><span>{locked ? 'POWER LOCKED' : active ? 'SELECT ONE POWER' : 'WAITING'}</span></div>
-    <div className="gc-power-grid">{powers.map((power, i) => <button key={`${power.name}-${i}`} disabled={!active || locked} className={selected === i ? 'chosen' : ''} onClick={() => onChoose(i)}><b>{i + 1}</b><span style={{ color: power.color }}>{power.icon}</span><small>{locked && selected === i ? 'LOCKED' : power.name}</small></button>)}</div>
+    <div className="gc-power-grid">{powers.map((power, i) => <button key={`${power.name}-${i}`} aria-label={`Choose power ${i + 1}: ${power.name}`} title={`Power ${i + 1}`} disabled={!active || locked} className={selected === i ? 'chosen' : ''} onClick={() => onChoose(i)}><b>{i + 1}</b></button>)}</div>
     {locked && selected !== null && <div className="gc-choice-confirm">SELECTION LOCKED · HIDDEN UNTIL REVEAL</div>}
   </div>
 }

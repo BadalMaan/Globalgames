@@ -1,0 +1,10 @@
+LATEST POWER HIT UPDATE
+
+1. Every round now resolves both players' attacks: blue power hits the red fighter and red power hits the blue fighter. Both health bars can decrease in the same exchange.
+2. Damage is calculated from each selected power's strength. Shield powers reduce incoming damage; healing powers restore health.
+3. The result animation now applies the correct reaction to both fighters independently, including falling when health reaches zero.
+4. Power projectiles are larger, brighter, and animate toward the centre of the arena. The central impact flash is stronger so the hit is easier to see.
+5. The power-selection controls now show only 1, 2, 3, 4, 5. Player 1's buttons are blue; Player 2's buttons are red. Accessible labels retain the underlying power names for assistive technology.
+6. The centre collision label is shortened to HIT.
+
+Deployment: replace the previous project files in GitHub with these ZIP contents and let Netlify redeploy. No database migration is required for these frontend changes.

@@ -737,3 +737,48 @@ body{background:var(--bg);color:var(--text)}
 }
 @keyframes power-impact-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
 @media(max-width:760px){.gc-blast{top:34%!important;height:130px!important;width:62%!important}.gc-blast.blue{left:12%!important}.gc-blast.red{right:12%!important}}
+
+/* POWER HIT VISIBILITY + SIMPLE NUMBER CONTROLS — latest requested pass */
+.gc-stage.is-clashing .gc-blast{
+  top:34%!important;height:230px!important;width:66%!important;z-index:10!important;
+  opacity:1!important;visibility:visible!important;overflow:visible!important;
+  mix-blend-mode:screen!important;filter:drop-shadow(0 0 18px var(--blast)) drop-shadow(0 0 34px var(--blast2))!important;
+}
+.gc-stage.is-clashing .gc-blast.blue{left:8%!important;right:auto!important;transform:none!important}
+.gc-stage.is-clashing .gc-blast.red{right:8%!important;left:auto!important;transform:scaleX(-1)!important}
+.gc-stage.is-clashing .gc-blast-art{
+  display:block!important;opacity:1!important;visibility:visible!important;
+  width:100%!important;height:100%!important;object-fit:contain!important;
+  animation:arena-projectile-hit 1.35s cubic-bezier(.16,.72,.2,1) both!important;
+}
+.gc-stage.is-clashing .gc-blast.red .gc-blast-art{animation-name:arena-projectile-hit-red!important}
+@keyframes arena-projectile-hit{
+  0%{opacity:0;transform:translateX(-18%) scale(.58)}
+  16%{opacity:1;transform:translateX(-7%) scale(1.02)}
+  72%{opacity:1;transform:translateX(15%) scale(1.18)}
+  100%{opacity:1;transform:translateX(22%) scale(1.22)}
+}
+@keyframes arena-projectile-hit-red{
+  0%{opacity:0;transform:translateX(-18%) scale(.58)}
+  16%{opacity:1;transform:translateX(-7%) scale(1.02)}
+  72%{opacity:1;transform:translateX(15%) scale(1.18)}
+  100%{opacity:1;transform:translateX(22%) scale(1.22)}
+}
+.gc-stage.is-clashing:after{z-index:13!important;width:clamp(120px,17vw,220px)!important;height:clamp(120px,17vw,220px)!important;animation:power-impact-flash .85s ease-out .8s both!important}
+.gc-impact{z-index:15!important}
+.gc-impact b{font-size:clamp(9px,1vw,13px)!important;letter-spacing:.08em!important}
+.gc-power-grid{grid-template-columns:repeat(5,minmax(0,1fr))!important;gap:8px!important}
+.gc-power-grid button{
+  height:clamp(54px,7vh,72px)!important;min-height:54px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:2px solid #258fd0!important;border-radius:10px!important;
+  background:linear-gradient(180deg,#f4fbff,#dcefff)!important;color:#0876bd!important;
+  box-shadow:0 3px 9px #1e78aa18!important;
+}
+.gc-picker.red .gc-power-grid button{border-color:#e66c58!important;background:linear-gradient(180deg,#fff7f4,#ffe5df)!important;color:#d44835!important}
+.gc-power-grid button>b{font-size:clamp(22px,2.2vw,30px)!important;font-weight:900!important;line-height:1!important}
+.gc-power-grid button>span,.gc-power-grid button>small{display:none!important}
+.gc-power-grid button:disabled{opacity:1!important;filter:none!important}
+.gc-power-grid button.chosen{outline:3px solid #168bd1!important;background:#c8eaff!important;transform:translateY(-2px)!important}
+.gc-picker.red .gc-power-grid button.chosen{outline-color:#e15d49!important;background:#ffd2c8!important}
+@media(max-width:760px){.gc-stage.is-clashing .gc-blast{height:150px!important;width:72%!important;top:37%!important}.gc-stage.is-clashing .gc-blast.blue{left:3%!important}.gc-stage.is-clashing .gc-blast.red{right:3%!important}.gc-power-grid{gap:4px!important}.gc-power-grid button{height:48px!important;min-height:48px!important}.gc-power-grid button>b{font-size:20px!important}}
