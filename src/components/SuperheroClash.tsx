@@ -1,41 +1,147 @@
 import { useState } from 'react'
-import { ArrowLeft, RefreshCw, Swords, Trophy, Zap, Crown, Flame, Shield, Sparkles } from 'lucide-react'
-import ThreeDuelScene from './ThreeDuelScene'
+import { ArrowLeft, Crown, Shield, Swords, Zap, RotateCcw, Sparkles } from 'lucide-react'
 
-type Props={onExit:()=>void;onWin?:()=>void}
-type HeroSide='blue'|'red'
-const heroes={
- blue:[
-  {name:'NOVA',title:'THE LIGHTNING STRIKER',image:'/images/hero-blue.png',power:'THUNDER BLAST',desc:'Launch a charged lightning sphere that knocks the enemy back.'},
-  {name:'VOLT',title:'THE STORM WARRIOR',image:'/images/hero-blue.png',power:'PLASMA SHOCK',desc:'A fast energy projectile with a heavy impact.'},
-  {name:'FROST',title:'THE ICE GUARDIAN',image:'/images/hero-blue.png',power:'GLACIER BURST',desc:'A freezing blast that interrupts the opponent.'}
- ],
- red:[
-  {name:'EMBER',title:'THE FIRE CHAMPION',image:'/images/hero-red.png',power:'INFERNO BLAST',desc:'A blazing projectile with powerful knockback.'},
-  {name:'HEX',title:'THE SHADOW LORD',image:'/images/hero-red.png',power:'VOID BURST',desc:'A dark energy orb that smashes through the arena.'},
-  {name:'SOLIS',title:'THE SOLAR KNIGHT',image:'/images/hero-red.png',power:'SOLAR NOVA',desc:'A focused solar blast with explosive impact.'}
- ]
+type Props = { onExit: () => void; onWin?: () => void }
+type Side = 'blue' | 'red'
+type Power = { name: string; type: string; icon: string; strength: number; color: string; note: string }
+
+const blueHeroes = [
+  { name: 'NOVA', title: 'THE LIGHTNING STRIKER', image: '/images/hero-blue.png' },
+  { name: 'VOLT', title: 'THE STORM WARRIOR', image: '/images/hero-blue.png' },
+  { name: 'FROST', title: 'THE ICE GUARDIAN', image: '/images/hero-blue.png' },
+]
+const redHeroes = [
+  { name: 'EMBER', title: 'THE FIRE CHAMPION', image: '/images/hero-red.png' },
+  { name: 'HEX', title: 'THE SHADOW LORD', image: '/images/hero-red.png' },
+  { name: 'SOLIS', title: 'THE SOLAR KNIGHT', image: '/images/hero-red.png' },
+]
+const powerPool: Power[] = [
+  { name: 'THUNDER SPEAR', type: 'LIGHTNING', icon: 'ϟ', strength: 78, color: '#55c8ff', note: 'A focused bolt that pierces the arena.' },
+  { name: 'INFERNO WAVE', type: 'FIRE', icon: '✦', strength: 86, color: '#ff754d', note: 'A sweeping wave of controlled flame.' },
+  { name: 'FROST BREAKER', type: 'ICE', icon: '❄', strength: 72, color: '#8deaff', note: 'A freezing strike that slows the rival.' },
+  { name: 'VOID CRUSH', type: 'SHADOW', icon: '◈', strength: 92, color: '#b58aff', note: 'A dense shadow blast with heavy impact.' },
+  { name: 'SOLAR BURST', type: 'SOLAR', icon: '☼', strength: 88, color: '#ffd36c', note: 'A bright burst of concentrated energy.' },
+  { name: 'WIND CUTTER', type: 'WIND', icon: '〰', strength: 66, color: '#a9e6cf', note: 'A fast pressure wave across the ground.' },
+  { name: 'CRYSTAL GUARD', type: 'SHIELD', icon: '⬡', strength: 70, color: '#83c9ff', note: 'A defensive wall that absorbs impact.' },
+  { name: 'METEOR KICK', type: 'IMPACT', icon: '✹', strength: 82, color: '#ff9b70', note: 'A high-speed physical finisher.' },
+  { name: 'PLASMA ORB', type: 'PLASMA', icon: '●', strength: 80, color: '#76a9ff', note: 'A compact energy orb with a sharp hit.' },
+  { name: 'PHANTOM DASH', type: 'SPEED', icon: '➤', strength: 75, color: '#d0a8ff', note: 'A sudden dash followed by a clean strike.' },
+]
+function shufflePowers(): Power[] {
+  const pool = [...powerPool]
+  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]] }
+  return pool.slice(0, 5)
 }
-export default function SuperheroClash({onExit,onWin}:Props){
- const [stage,setStage]=useState<'select'|'battle'|'result'>('select')
- const [blue,setBlue]=useState(0),[red,setRed]=useState(0)
- const [winner,setWinner]=useState<HeroSide>('blue')
- const [blueName,setBlueName]=useState('NOVA'),[redName,setRedName]=useState('EMBER')
- const start=()=>{setBlueName(heroes.blue[blue].name);setRedName(heroes.red[red].name);setStage('battle')}
- const finish=(side:HeroSide)=>{setWinner(side);setStage('result');onWin?.()}
- const reset=()=>setStage('select')
- return <div className="gsh-screen gsh-real-game">
-  <div className="gsh-back-row"><button onClick={stage==='battle'?onExit:onExit}><ArrowLeft size={17}/> EXIT ARENA</button><div className="gsh-brand"><Crown size={18}/> GLOBAL SUPER HERO</div><span className="gsh-round-tag">2 PLAYER · REAL-TIME FIGHT</span></div>
-  {stage==='select'&&<div className="fighter-select">
-   <div className="fighter-select-heading"><span>CHOOSE YOUR CHAMPIONS</span><h1>ENTER THE BATTLE ARENA</h1><p>Two players. One arena. Fight using your keyboard. Every punch, kick and power hits in real time.</p></div>
-   <div className="fighter-select-grid">
-    <section className="fighter-pick blue"><div className="fighter-pick-label">PLAYER 1 · BLUE TEAM</div><img src={heroes.blue[blue].image}/><h2>{heroes.blue[blue].name}</h2><strong>{heroes.blue[blue].title}</strong><div className="fighter-pick-power"><Zap size={18}/><b>{heroes.blue[blue].power}</b></div><p>{heroes.blue[blue].desc}</p><div className="fighter-pick-options">{heroes.blue.map((h,i)=><button className={blue===i?'selected':''} key={h.name} onClick={()=>{setBlue(i);setBlueName(h.name)}}>{h.name}</button>)}</div><input aria-label="Player 1 hero name" value={blueName} maxLength={18} onChange={e=>setBlueName(e.target.value.toUpperCase())}/></section>
-    <div className="fighter-select-vs">VS</div>
-    <section className="fighter-pick red"><div className="fighter-pick-label">PLAYER 2 · RED TEAM</div><img src={heroes.red[red].image}/><h2>{heroes.red[red].name}</h2><strong>{heroes.red[red].title}</strong><div className="fighter-pick-power"><Flame size={18}/><b>{heroes.red[red].power}</b></div><p>{heroes.red[red].desc}</p><div className="fighter-pick-options">{heroes.red.map((h,i)=><button className={red===i?'selected':''} key={h.name} onClick={()=>{setRed(i);setRedName(h.name)}}>{h.name}</button>)}</div><input aria-label="Player 2 hero name" value={redName} maxLength={18} onChange={e=>setRedName(e.target.value.toUpperCase())}/></section>
-   </div>
-   <div className="fighter-select-bottom"><div><Shield size={17}/> Special power recharges over time</div><button onClick={start}>START REAL FIGHT <Swords size={19}/></button></div>
-  </div>}
-  {stage==='battle'&&<div className="fighter-arena-wrap"><ThreeDuelScene blueName={blueName||heroes.blue[blue].name} redName={redName||heroes.red[red].name} blueImage={heroes.blue[blue].image} redImage={heroes.red[red].image} onWin={finish} onExit={onExit}/></div>}
-  {stage==='result'&&<div className="fighter-result"><div className="fighter-result-icon"><Trophy size={62}/></div><span>ARENA CHAMPION</span><h1>{winner==='blue'?blueName:redName}</h1><h2>WINS THE BATTLE!</h2><p>{winner==='blue'?'Player 1 dominated the arena.':'Player 2 dominated the arena.'}</p><button onClick={reset}><RefreshCw size={18}/> FIGHT AGAIN</button><button className="fighter-exit" onClick={onExit}>BACK TO GAME ARENA</button></div>}
- </div>
+
+export default function SuperheroClash({ onExit, onWin }: Props) {
+  const [blueHero, setBlueHero] = useState(0)
+  const [redHero, setRedHero] = useState(0)
+  const [round, setRound] = useState(1)
+  const [phase, setPhase] = useState<'select' | 'p1' | 'p2' | 'ready' | 'clash' | 'result' | 'finished'>('select')
+  const [bluePowers, setBluePowers] = useState<Power[]>([])
+  const [redPowers, setRedPowers] = useState<Power[]>([])
+  const [bluePick, setBluePick] = useState<number | null>(null)
+  const [redPick, setRedPick] = useState<number | null>(null)
+  const [blueHealth, setBlueHealth] = useState(100)
+  const [redHealth, setRedHealth] = useState(100)
+  const [winner, setWinner] = useState<Side | null>(null)
+  const [lastHit, setLastHit] = useState('')
+  const [clashId, setClashId] = useState(0)
+
+  const blue = blueHeroes[blueHero], red = redHeroes[redHero]
+  const bluePower = bluePick === null ? null : bluePowers[bluePick]
+  const redPower = redPick === null ? null : redPowers[redPick]
+
+  const begin = () => {
+    setBlueHealth(100); setRedHealth(100); setRound(1); setWinner(null); setLastHit('')
+    setBluePowers(shufflePowers()); setRedPowers(shufflePowers()); setBluePick(null); setRedPick(null); setPhase('p1')
+  }
+  const choose = (side: Side, index: number) => {
+    if (side === 'blue' && phase === 'p1') { setBluePick(index); setPhase('p2') }
+    if (side === 'red' && phase === 'p2') { setRedPick(index); setPhase('ready') }
+  }
+  const resolve = () => {
+    if (!bluePower || !redPower) return
+    setPhase('clash'); setClashId(v => v + 1)
+    const bRoll = bluePower.strength * (0.82 + Math.random() * 0.36)
+    const rRoll = redPower.strength * (0.82 + Math.random() * 0.36)
+    const bWins = bRoll >= rRoll
+    const damage = Math.max(8, Math.min(25, Math.round(Math.abs(bRoll - rRoll) * 0.48 + 9)))
+    const nextBlue = Math.max(0, blueHealth - (bWins ? 0 : damage))
+    const nextRed = Math.max(0, redHealth - (bWins ? damage : 0))
+    const message = bWins ? `${bluePower.name} OVERPOWERS ${redPower.name}` : `${redPower.name} BREAKS THROUGH ${bluePower.name}`
+    window.setTimeout(() => {
+      setBlueHealth(nextBlue); setRedHealth(nextRed); setLastHit(message)
+      if (nextBlue <= 0 || nextRed <= 0) { const winSide: Side = nextBlue > nextRed ? 'blue' : 'red'; setWinner(winSide); setPhase('finished'); onWin?.() }
+      else setPhase('result')
+    }, 2100)
+  }
+  const nextRound = () => {
+    setRound(v => v + 1); setBluePowers(shufflePowers()); setRedPowers(shufflePowers()); setBluePick(null); setRedPick(null); setLastHit(''); setPhase('p1')
+  }
+  const reset = () => { setPhase('select'); setWinner(null); setBlueHealth(100); setRedHealth(100) }
+
+  return <main className="gsh-screen gsh-real-game gsh-clean-clash">
+    <header className="gsh-back-row"><button onClick={onExit}><ArrowLeft size={17}/> EXIT ARENA</button><div className="gsh-brand"><Crown size={18}/> GLOBAL SUPER HERO</div><span className="gsh-round-tag">2 PLAYER · POWER CLASH</span></header>
+
+    {phase === 'select' && <section className="gc-select">
+      <div className="gc-kicker">THE ARENA IS READY</div><h1>CHOOSE YOUR CHAMPIONS</h1><p>Two heroes enter. Every round brings five new powers. Choose wisely.</p>
+      <div className="gc-select-grid">
+        <article className="gc-hero-card blue"><div className="gc-player-label">PLAYER 1</div><img src={blue.image} alt="Blue hero"/><h2>{blue.name}</h2><span>{blue.title}</span><div className="gc-hero-switch">{blueHeroes.map((h, i) => <button key={h.name} className={blueHero === i ? 'active' : ''} onClick={() => setBlueHero(i)}>{h.name}</button>)}</div></article>
+        <div className="gc-vs">VS</div>
+        <article className="gc-hero-card red"><div className="gc-player-label">PLAYER 2</div><img src={red.image} alt="Red hero"/><h2>{red.name}</h2><span>{red.title}</span><div className="gc-hero-switch">{redHeroes.map((h, i) => <button key={h.name} className={redHero === i ? 'active' : ''} onClick={() => setRedHero(i)}>{h.name}</button>)}</div></article>
+      </div>
+      <button className="gc-primary" onClick={begin}>ENTER THE ARENA <Swords size={19}/></button>
+    </section>}
+
+    {phase !== 'select' && <section className="gc-game">
+      <div className="gc-top-hud">
+        <div className="gc-hud-side blue"><div><small>PLAYER 1</small><strong>{blue.name}</strong></div><div className="gc-health"><i style={{ width: `${blueHealth}%` }}/></div><b>{blueHealth}%</b></div>
+        <div className="gc-round"><small>ROUND</small><strong>{round.toString().padStart(2, '0')}</strong></div>
+        <div className="gc-hud-side red"><div><small>PLAYER 2</small><strong>{red.name}</strong></div><div className="gc-health"><i style={{ width: `${redHealth}%` }}/></div><b>{redHealth}%</b></div>
+      </div>
+
+      <div className={`gc-stage ${phase === 'clash' ? 'is-clashing' : ''}`} key={clashId}>
+        <div className="gc-arena-backdrop"><div className="gc-arch"/><div className="gc-floor-ring ring-one"/><div className="gc-floor-ring ring-two"/><div className="gc-floor-line"/></div>
+        <div className={`gc-fighter blue ${phase === 'clash' ? 'blue-attack' : phase === 'finished' && winner === 'red' ? 'blue-fall' : ''}`}><img src={blue.image} alt={blue.name}/><span>{blue.name}</span></div>
+        <div className={`gc-fighter red ${phase === 'clash' ? 'red-attack' : phase === 'finished' && winner === 'blue' ? 'red-fall' : ''}`}><img src={red.image} alt={red.name}/><span>{red.name}</span></div>
+        {phase === 'clash' && <div className="gc-impact"><i/><b>CLASH!</b><i/></div>}
+        {(phase === 'result' || phase === 'finished') && <div className="gc-result-banner"><strong>{phase === 'finished' ? `${winner === 'blue' ? blue.name : red.name} WINS!` : lastHit}</strong><span>{phase === 'finished' ? 'ARENA CHAMPION' : 'POWER COLLISION COMPLETE'}</span></div>}
+      </div>
+
+      <div className="gc-turn-status">
+        {phase === 'p1' && <><span className="gc-dot blue-dot"/> PLAYER 1 — CHOOSE A NUMBER</>}
+        {phase === 'p2' && <><span className="gc-dot red-dot"/> PLAYER 2 — YOUR TURN. PLAYER 1'S PICK IS HIDDEN.</>}
+        {phase === 'ready' && <><Sparkles size={16}/> BOTH POWERS LOCKED — READY TO REVEAL?</>}
+        {phase === 'clash' && <><Zap size={16}/> POWERS RELEASED — WATCH THE IMPACT</>}
+        {phase === 'result' && <><Shield size={16}/> ROUND COMPLETE — CHOOSE AGAIN</>}
+        {phase === 'finished' && <><Crown size={16}/> BATTLE FINISHED</>}
+      </div>
+
+      {(phase === 'p1' || phase === 'p2' || phase === 'ready') && <div className="gc-pick-panels">
+        <PowerPicker side="blue" powers={bluePowers} selected={phase === 'p2' || phase === 'ready' ? null : bluePick} active={phase === 'p1'} locked={bluePick !== null} onChoose={i => choose('blue', i)} />
+        <div className="gc-middle-action">
+          <div className="gc-lock-state">{bluePick === null ? 'P1 WAITING' : 'P1 LOCKED'}<span>{redPick === null ? 'P2 WAITING' : 'P2 LOCKED'}</span></div>
+          {phase === 'ready' && <button className="gc-primary gc-reveal" onClick={resolve}>REVEAL &amp; CLASH <Swords size={18}/></button>}
+          {phase !== 'ready' && <div className="gc-vs-mini">VS</div>}
+        </div>
+        <PowerPicker side="red" powers={redPowers} selected={phase === 'ready' ? null : redPick} active={phase === 'p2'} locked={redPick !== null} onChoose={i => choose('red', i)} />
+      </div>}
+      {(phase === 'clash' || phase === 'result' || phase === 'finished') && <div className="gc-reveal-row">
+        <div className="gc-revealed blue"><small>NOVA'S POWER</small><strong><em>{bluePower?.icon}</em>{bluePower?.name}</strong><span>{bluePower?.note}</span></div>
+        <div className="gc-revealed red"><small>EMBER'S POWER</small><strong><em>{redPower?.icon}</em>{redPower?.name}</strong><span>{redPower?.note}</span></div>
+      </div>}
+      {phase === 'result' && <button className="gc-primary gc-next" onClick={nextRound}>NEXT ROUND <Zap size={18}/></button>}
+      {phase === 'finished' && <div className="gc-finish-actions"><button className="gc-primary" onClick={begin}><RotateCcw size={17}/> REMATCH</button><button className="gc-secondary" onClick={reset}>CHANGE HEROES</button></div>}
+      <div className="gc-footnote">POWER SLOTS SHUFFLE EVERY ROUND <span>·</span> NO KEYBOARD REQUIRED <span>·</span> FIRST TO ZERO HEALTH LOSES</div>
+    </section>}
+  </main>
+}
+
+function PowerPicker({ side, powers, selected, active, locked, onChoose }: { side: Side; powers: Power[]; selected: number | null; active: boolean; locked: boolean; onChoose: (i: number) => void }) {
+  return <div className={`gc-picker ${side} ${active ? 'is-active' : ''} ${locked ? 'is-locked' : ''}`}>
+    <div className="gc-picker-head"><strong>{side === 'blue' ? 'PLAYER 1' : 'PLAYER 2'}</strong><span>{locked ? 'POWER LOCKED' : active ? 'SELECT ONE POWER' : 'WAITING'}</span></div>
+    <div className="gc-power-grid">{powers.map((power, i) => <button key={`${power.name}-${i}`} disabled={!active || locked} className={selected === i ? 'chosen' : ''} onClick={() => onChoose(i)}><b>{i + 1}</b><span style={{ color: power.color }}>{power.icon}</span><small>{locked && selected === i ? 'LOCKED' : `POWER ${i + 1}`}</small></button>)}</div>
+    {locked && selected !== null && <div className="gc-choice-confirm">SELECTION LOCKED · HIDDEN UNTIL REVEAL</div>}
+  </div>
 }
