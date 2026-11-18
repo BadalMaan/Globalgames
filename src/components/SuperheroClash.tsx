@@ -42,8 +42,8 @@ function shufflePowers(): Power[] {
 export default function SuperheroClash({ onExit, onWin }: Props) {
   const [blueHero, setBlueHero] = useState(0)
   const [redHero, setRedHero] = useState(0)
-  const [blueCustomName, setBlueCustomName] = useState('')
-  const [redCustomName, setRedCustomName] = useState('')
+  const [bluePlayerName, setBluePlayerName] = useState('NOVA')
+  const [redPlayerName, setRedPlayerName] = useState('EMBER')
   const [round, setRound] = useState(1)
   const [phase, setPhase] = useState<'select' | 'p1' | 'p2' | 'ready' | 'clash' | 'result' | 'finished'>('select')
   const [bluePowers, setBluePowers] = useState<Power[]>([])
@@ -61,19 +61,32 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
   const [redReaction, setRedReaction] = useState<'hurt' | 'stumble' | 'fall' | 'guard'>('hurt')
 
   const blue = blueHeroes[blueHero], red = redHeroes[redHero]
-  const blueName = blueCustomName.trim() || blue.name
-  const redName = redCustomName.trim() || red.name
+  const blueDisplayName = bluePlayerName.trim() || blue.name
+  const redDisplayName = redPlayerName.trim() || red.name
   const bluePower = bluePick === null ? null : bluePowers[bluePick]
   const redPower = redPick === null ? null : redPowers[redPick]
   const randomReaction = (): 'hurt' | 'stumble' | 'fall' | 'guard' => {
-    const reactions: ('hurt' | 'stumble' | 'fall' | 'guard')[] = ['hurt', 'stumble', 'guard', 'fall', 'hurt', 'stumble']
-    return reactions[Math.floor(Math.random() * reactions.length)]
+    const roll = Math.random()
+    return roll < 0.34 ? 'fall' : roll < 0.64 ? 'stumble' : roll < 0.9 ? 'hurt' : 'guard'
   }
   const poseForPower = (power: Power | null) => {
     if (!power) return 'punch'
-    if (['IMPACT', 'SPEED', 'LIGHTNING', 'ICE', 'SOLAR', 'WIND', 'WATER'].includes(power.type)) return 'kick'
-    if (power.type === 'SHIELD' || power.type === 'HEAL') return 'idle'
-    return 'punch'
+    if (power.type === 'SHIELD' || power.type === 'HEAL') return 'guard'
+    if (['IMPACT', 'SPEED'].includes(power.type)) return 'kick'
+    return 'cast'
+  }
+  const fighterImage = (side: Side, power: Power | null, reaction: string, isClashing: boolean, isWinner: boolean) => {
+    if (isClashing && power) {
+      if (side === 'blue' && power.type === 'WATER') return '/images/powers/blue-water.png'
+      if (side === 'blue' && power.type === 'LIGHTNING') return '/images/powers/blue-lightning.png'
+      if (side === 'blue' && power.type === 'SHIELD') return '/images/powers/blue-shield.png'
+      if (side === 'red' && power.type === 'FIRE') return '/images/powers/red-firebeam.png'
+      if (side === 'red' && power.type === 'SHIELD') return '/images/powers/red-shield.png'
+    }
+    if (isClashing) return `/images/fighters/${side}-${poseForPower(power) === 'cast' || poseForPower(power) === 'guard' ? 'punch' : poseForPower(power)}.png`
+    if (reaction === 'fall') return `/images/fighters/${side}-down.png`
+    if (reaction === 'hurt' || reaction === 'stumble') return `/images/fighters/${side}-hurt.png`
+    return `/images/fighters/${side}-idle.png`
   }
 
   const begin = () => {
@@ -100,8 +113,8 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
     const message = bWins ? `${bluePower.name} OVERPOWERS ${redPower.name}` : `${redPower.name} BREAKS THROUGH ${bluePower.name}`
     setImpactSide(bWins ? 'red' : 'blue')
     setAttackWinner(bWins ? 'blue' : 'red')
-    setBlueReaction(nextBlue <= 0 ? 'fall' : randomReaction())
-    setRedReaction(nextRed <= 0 ? 'fall' : randomReaction())
+    setBlueReaction(nextBlue <= 0 ? 'fall' : bWins ? 'guard' : randomReaction())
+    setRedReaction(nextRed <= 0 ? 'fall' : bWins ? randomReaction() : 'guard')
     window.setTimeout(() => {
       setBlueHealth(nextBlue); setRedHealth(nextRed); setLastHit(message)
       if (nextBlue <= 0 || nextRed <= 0) { const winSide: Side = nextBlue > nextRed ? 'blue' : 'red'; setWinner(winSide); setPhase('finished'); onWin?.() }
@@ -119,18 +132,18 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
     {phase === 'select' && <section className="gc-select">
       <div className="gc-kicker">THE ARENA IS READY</div><h1>CHOOSE YOUR CHAMPIONS</h1><p>Two heroes enter. Every round brings five new powers. Choose wisely.</p>
       <div className="gc-select-grid">
-        <article className="gc-hero-card blue"><div className="gc-player-label">PLAYER 1</div><img src={blue.image} alt="Blue hero"/><h2>{blueName}</h2><span>{blue.title}</span><label className="gc-name-edit">PLAYER 1 NAME<input aria-label="Player 1 custom name" maxLength={18} value={blueCustomName} onChange={e => setBlueCustomName(e.target.value)} placeholder={blue.name} /></label><div className="gc-hero-switch">{blueHeroes.map((h, i) => <button key={h.name} className={blueHero === i ? 'active' : ''} onClick={() => setBlueHero(i)}>{h.name}</button>)}</div></article>
+        <article className="gc-hero-card blue"><div className="gc-player-label">PLAYER 1</div><img src={blue.image} alt="Blue hero"/><h2>{blue.name}</h2><span>{blue.title}</span><label className="gc-name-field">PLAYER 1 NAME<input maxLength={18} value={bluePlayerName} onChange={e => setBluePlayerName(e.target.value)} placeholder="Enter player 1 name"/></label><div className="gc-hero-switch">{blueHeroes.map((h, i) => <button key={h.name} className={blueHero === i ? 'active' : ''} onClick={() => {setBlueHero(i);setBluePlayerName(h.name)}}>{h.name}</button>)}</div></article>
         <div className="gc-vs">VS</div>
-        <article className="gc-hero-card red"><div className="gc-player-label">PLAYER 2</div><img src={red.image} alt="Red hero"/><h2>{redName}</h2><span>{red.title}</span><label className="gc-name-edit">PLAYER 2 NAME<input aria-label="Player 2 custom name" maxLength={18} value={redCustomName} onChange={e => setRedCustomName(e.target.value)} placeholder={red.name} /></label><div className="gc-hero-switch">{redHeroes.map((h, i) => <button key={h.name} className={redHero === i ? 'active' : ''} onClick={() => setRedHero(i)}>{h.name}</button>)}</div></article>
+        <article className="gc-hero-card red"><div className="gc-player-label">PLAYER 2</div><img src={red.image} alt="Red hero"/><h2>{red.name}</h2><span>{red.title}</span><label className="gc-name-field">PLAYER 2 NAME<input maxLength={18} value={redPlayerName} onChange={e => setRedPlayerName(e.target.value)} placeholder="Enter player 2 name"/></label><div className="gc-hero-switch">{redHeroes.map((h, i) => <button key={h.name} className={redHero === i ? 'active' : ''} onClick={() => {setRedHero(i);setRedPlayerName(h.name)}}>{h.name}</button>)}</div></article>
       </div>
       <button className="gc-primary" onClick={begin}>ENTER THE ARENA <Swords size={19}/></button>
     </section>}
 
     {phase !== 'select' && <section className="gc-game">
       <div className="gc-top-hud">
-        <div className="gc-hud-side blue"><div><small>PLAYER 1</small><strong>{blueName}</strong></div><div className="gc-health"><i style={{ width: `${blueHealth}%` }}/></div><b>{blueHealth}%</b></div>
+        <div className="gc-hud-side blue"><div><small>PLAYER 1</small><strong>{blueDisplayName}</strong></div><div className="gc-health"><i style={{ width: `${blueHealth}%` }}/></div><b>{blueHealth}%</b></div>
         <div className="gc-round"><small>ROUND</small><strong>{round.toString().padStart(2, '0')}</strong></div>
-        <div className="gc-hud-side red"><div><small>PLAYER 2</small><strong>{redName}</strong></div><div className="gc-health"><i style={{ width: `${redHealth}%` }}/></div><b>{redHealth}%</b></div>
+        <div className="gc-hud-side red"><div><small>PLAYER 2</small><strong>{redDisplayName}</strong></div><div className="gc-health"><i style={{ width: `${redHealth}%` }}/></div><b>{redHealth}%</b></div>
       </div>
 
       <div className={`gc-stage ${phase === 'clash' ? `is-clashing dominant-${attackWinner} blue-power-${bluePower?.type.toLowerCase()} red-power-${redPower?.type.toLowerCase()}` : ''} ${phase === 'result' ? `impact-${impactSide}` : ''}`} key={clashId}>
@@ -141,14 +154,12 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
           <div className="gc-impact"><i/><b>CLASH!</b><i/></div>
         </>}
         <div className={`gc-fighter blue ${phase === 'clash' ? `blue-attack pose-${poseForPower(bluePower)}` : phase === 'result' && impactSide === 'blue' ? `blue-${blueReaction}` : phase === 'finished' && winner === 'red' ? 'blue-fall' : ''}`}>
-          <img src={`/images/fighters/blue-${phase === 'clash' ? poseForPower(bluePower) : phase === 'result' && impactSide === 'blue' ? (blueReaction === 'fall' ? 'down' : blueReaction === 'guard' ? 'idle' : 'hurt') : phase === 'finished' && winner === 'red' ? 'down' : 'idle'}.png`} alt={`${blueName} fighter action`} />
-          <span>{blueName}</span>
+          <img src={fighterImage('blue', bluePower, blueReaction, phase === 'clash', phase === 'clash' && attackWinner === 'blue')} alt={`${blueDisplayName} fighter action`} />
         </div>
         <div className={`gc-fighter red ${phase === 'clash' ? `red-attack pose-${poseForPower(redPower)}` : phase === 'result' && impactSide === 'red' ? `red-${redReaction}` : phase === 'finished' && winner === 'blue' ? 'red-fall' : ''}`}>
-          <img src={`/images/fighters/red-${phase === 'clash' ? poseForPower(redPower) : phase === 'result' && impactSide === 'red' ? (redReaction === 'fall' ? 'down' : redReaction === 'guard' ? 'idle' : 'hurt') : phase === 'finished' && winner === 'blue' ? 'down' : 'idle'}.png`} alt={`${redName} fighter action`} />
-          <span>{redName}</span>
+          <img src={fighterImage('red', redPower, redReaction, phase === 'clash', phase === 'clash' && attackWinner === 'red')} alt={`${redDisplayName} fighter action`} />
         </div>
-        {(phase === 'result' || phase === 'finished') && <div className="gc-result-banner"><strong>{phase === 'finished' ? `${winner === 'blue' ? blueName : redName} WINS!` : lastHit}</strong><span>{phase === 'finished' ? 'ARENA CHAMPION' : 'POWER COLLISION COMPLETE'}</span></div>}
+        {(phase === 'result' || phase === 'finished') && <div className="gc-result-banner"><strong>{phase === 'finished' ? `${winner === 'blue' ? blueDisplayName : redDisplayName} WINS!` : lastHit}</strong><span>{phase === 'finished' ? 'ARENA CHAMPION' : 'POWER COLLISION COMPLETE'}</span></div>}
       </div>
 
       <div className="gc-turn-status">
@@ -170,8 +181,8 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
         <PowerPicker side="red" powers={redPowers} selected={phase === 'ready' ? null : redPick} active={phase === 'p2'} locked={redPick !== null} onChoose={i => choose('red', i)} />
       </div>}
       {(phase === 'clash' || phase === 'result' || phase === 'finished') && <div className="gc-reveal-row">
-        <div className="gc-revealed blue"><small>NOVA'S POWER</small><strong><em>{bluePower?.icon}</em>{bluePower?.name}</strong><span>{bluePower?.note}</span></div>
-        <div className="gc-revealed red"><small>EMBER'S POWER</small><strong><em>{redPower?.icon}</em>{redPower?.name}</strong><span>{redPower?.note}</span></div>
+        <div className="gc-revealed blue"><small>{blueDisplayName}'S POWER</small><strong><em>{bluePower?.icon}</em>{bluePower?.name}</strong><span>{bluePower?.note}</span></div>
+        <div className="gc-revealed red"><small>{redDisplayName}'S POWER</small><strong><em>{redPower?.icon}</em>{redPower?.name}</strong><span>{redPower?.note}</span></div>
       </div>}
       {phase === 'result' && <button className="gc-primary gc-next" onClick={nextRound}>NEXT ROUND <Zap size={18}/></button>}
       {phase === 'finished' && <div className="gc-finish-actions"><button className="gc-primary" onClick={begin}><RotateCcw size={17}/> REMATCH</button><button className="gc-secondary" onClick={reset}>CHANGE HEROES</button></div>}

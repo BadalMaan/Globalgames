@@ -1,0 +1,21 @@
+GLOBAL PUNJABI CLASSES — ARENA VISUAL UPDATE
+
+This update changes the Global Super Hero arena UI and battle visuals:
+- Bright white / sky-blue interface and arena presentation.
+- Larger hero portraits on the champion selection screen.
+- Editable Player 1 and Player 2 names (up to 18 characters).
+- Player name labels removed from beneath the fighters during battle.
+- Generated transparent character power artwork added for blue water, lightning and shield attacks, and red fire and shield attacks.
+- Power artwork is used during the clash animation; other power types retain the existing animated effects.
+- Loser reaction and fall positions are kept inside the arena frame and point outward toward their own side.
+- Larger dashboard featured-game artwork.
+
+Deployment:
+1. Extract this ZIP.
+2. Upload/replace the project files in the existing GitHub repository (or commit these changes locally).
+3. Push/commit the changes. Netlify should redeploy automatically if connected to that repository.
+4. No new Supabase migration or secret is required for these visual/UI changes.
+
+Validation:
+- TypeScript/TSX syntax transpilation passed for the edited App.tsx and SuperheroClash.tsx.
+- A full npm production build was not run in this environment. Run `npm install` then `npm run build` before production release if your environment has dependencies installed.
