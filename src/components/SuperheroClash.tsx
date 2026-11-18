@@ -145,7 +145,9 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
         {phase === 'clash' && <>
           <PowerBlast side="blue" power={bluePower} />
           <PowerBlast side="red" power={redPower} />
-          <div className="gc-impact"><i/><b>HIT</b><i/></div>
+          <div className="gc-hit-spark gc-hit-blue" aria-hidden="true"/>
+          <div className="gc-hit-spark gc-hit-red" aria-hidden="true"/>
+          <div className="gc-impact"><i/><b>CLASH</b><i/></div>
         </>}
         <div className={`gc-fighter blue ${phase === 'clash' ? `blue-attack pose-${poseForPower(bluePower)}` : phase === 'result' ? `blue-${blueReaction}` : phase === 'finished' && winner === 'red' ? 'blue-fall' : ''}`}>
           <img src={fighterImage('blue', bluePower, blueReaction, phase === 'clash')} alt={`${blueDisplayName} fighter action`} />
@@ -153,7 +155,8 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
         <div className={`gc-fighter red ${phase === 'clash' ? `red-attack pose-${poseForPower(redPower)}` : phase === 'result' ? `red-${redReaction}` : phase === 'finished' && winner === 'blue' ? 'red-fall' : ''}`}>
           <img src={fighterImage('red', redPower, redReaction, phase === 'clash')} alt={`${redDisplayName} fighter action`} />
         </div>
-        {(phase === 'result' || phase === 'finished') && <div className="gc-result-banner"><strong>{phase === 'finished' ? `${winner === 'blue' ? blueDisplayName : redDisplayName} WINS!` : 'ROUND COMPLETE'}</strong><span>{phase === 'finished' ? 'ARENA CHAMPION' : 'CHOOSE AGAIN'}</span></div>}
+        {phase === 'result' && <div className="gc-result-banner"><strong>ROUND COMPLETE</strong><span>CHOOSE AGAIN</span></div>}
+      {phase === 'finished' && <div className={`gc-win-celebration ${winner || 'blue'}`} aria-live="assertive"><div className="gc-firework fw-one"/><div className="gc-firework fw-two"/><div className="gc-firework fw-three"/><div className="gc-win-copy"><span>✦ VICTORY ✦</span><strong>{winner === 'blue' ? blueDisplayName : redDisplayName}</strong><b>ARENA CHAMPION</b></div><div className="gc-firework fw-four"/><div className="gc-firework fw-five"/></div>}
       </div>
 
       <div className="gc-turn-status">
