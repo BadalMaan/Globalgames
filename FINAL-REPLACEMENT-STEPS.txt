@@ -1,0 +1,45 @@
+GLOBAL SUPER HERO — FULL-SCREEN POWER CLASH UPDATE
+
+This is the complete Punjabi Game Arena project, with the Power Clash game updated to use a full-screen arena presentation.
+
+IMPORTANT: To make GitHub Desktop show changes, copy the extracted files OVER your existing local repository. Simply downloading/extracting the ZIP does not change GitHub Desktop's repository.
+
+INSTALL:
+1. Extract this ZIP into a normal folder.
+2. Open GitHub Desktop and select your existing Globalgames repository.
+3. Click Repository > Show in Explorer.
+4. Copy everything INSIDE the extracted folder into the Globalgames folder that just opened.
+5. Choose Replace files / Merge folders when Windows asks.
+6. Go back to GitHub Desktop. You should now see many changed files, including:
+   - src/components/SuperheroClash.tsx
+   - src/style.css
+7. Enter a summary such as: Full-screen cinematic Power Clash update
+8. Click Commit to main, then Push origin.
+9. Netlify will deploy from the connected GitHub branch.
+
+GAME FLOW:
+- No keyboard controls.
+- Player 1 chooses one of five numbered powers.
+- Player 2 chooses one of five numbered powers without seeing Player 1's choice.
+- The centre Reveal & Clash button starts the battle.
+- Power slots shuffle for both players each round.
+- The stronger power visually overpowers the weaker one; health is reduced for the losing hero.
+- Continue until one hero reaches zero health.
+
+VISUALS:
+- Full-screen arena image, softened slightly so the heroes remain the focus.
+- Large separate transparent hero artwork, facing one another.
+- Idle, punch/kick, hurt and down pose artwork.
+- Animated elemental beams, sparks, impact flash and arena shake.
+- Bottom-only power selection panels during the selection phase.
+
+BUILD:
+- Node 22
+- npm install
+- npm run build
+- Netlify publish directory: dist
+
+TEST STATUS:
+- Source files and project structure are included.
+- A full production build was not run here because dependency installation timed out in this environment. Please run npm install and npm run build locally before production deployment.
+- The fighter poses are image-based with CSS motion/effects, not a skeletal 3D animation rig.
