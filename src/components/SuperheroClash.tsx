@@ -63,10 +63,6 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
   const redDisplayName = redPlayerName.trim() || red.name
   const bluePower = bluePick === null ? null : bluePowers[bluePick]
   const redPower = redPick === null ? null : redPowers[redPick]
-  const randomReaction = (): 'hurt' | 'stumble' | 'fall' | 'guard' => {
-    const roll = Math.random()
-    return roll < 0.42 ? 'stumble' : roll < 0.86 ? 'hurt' : 'guard'
-  }
   const poseForPower = (power: Power | null) => {
     if (!power) return 'punch'
     if (power.type === 'SHIELD' || power.type === 'HEAL') return 'guard'
@@ -96,19 +92,28 @@ export default function SuperheroClash({ onExit, onWin }: Props) {
   const resolve = () => {
     if (!bluePower || !redPower) return
     setPhase('clash'); setClashId(v => v + 1)
-    // Both selected powers are released in the same round. Each projectile
-    // reaches the opposite fighter, so both players can take damage together.
-    const rawBlueHit = Math.round(8 + bluePower.strength * 0.11)
-    const rawRedHit = Math.round(8 + redPower.strength * 0.11)
-    const blueDamage = redPower.type === 'SHIELD' ? Math.max(2, Math.round(rawBlueHit * 0.28)) : rawBlueHit
-    const redDamage = bluePower.type === 'SHIELD' ? Math.max(2, Math.round(rawRedHit * 0.28)) : rawRedHit
-    const blueHeal = bluePower.type === 'HEAL' ? 12 : 0
-    const redHeal = redPower.type === 'HEAL' ? 12 : 0
+    // The two powers collide in the middle. Only the stronger power breaks
+    // through and reaches the opposing fighter; the weaker power is stopped.
+    // Therefore only the owner of the weaker power takes damage this round.
+    // A tie is resolved randomly so there is still only one direct hit.
+    const blueWinsClash = bluePower.strength === redPower.strength
+      ? Math.random() < 0.5
+      : bluePower.strength > redPower.strength
+    const winnerPower = blueWinsClash ? bluePower : redPower
+    const hitDamage = Math.round(10 + winnerPower.strength * 0.16)
+    const blueTakesHit = !blueWinsClash
+    const redTakesHit = blueWinsClash
+    const blueHeal = bluePower.type === 'HEAL' && !blueTakesHit ? 12 : 0
+    const redHeal = redPower.type === 'HEAL' && !redTakesHit ? 12 : 0
+    const blueShielded = bluePower.type === 'SHIELD' && blueTakesHit
+    const redShielded = redPower.type === 'SHIELD' && redTakesHit
+    const blueDamage = blueTakesHit ? (blueShielded ? Math.max(2, Math.round(hitDamage * 0.28)) : hitDamage) : 0
+    const redDamage = redTakesHit ? (redShielded ? Math.max(2, Math.round(hitDamage * 0.28)) : hitDamage) : 0
     const nextBlue = Math.min(100, Math.max(0, blueHealth - blueDamage + blueHeal))
     const nextRed = Math.min(100, Math.max(0, redHealth - redDamage + redHeal))
-    setImpactSide(null)
-    setBlueReaction(nextBlue <= 0 ? 'fall' : redPower.type === 'SHIELD' || bluePower.type === 'HEAL' ? 'guard' : randomReaction())
-    setRedReaction(nextRed <= 0 ? 'fall' : bluePower.type === 'SHIELD' || redPower.type === 'HEAL' ? 'guard' : randomReaction())
+    setImpactSide(blueWinsClash ? 'red' : 'blue')
+    setBlueReaction(blueTakesHit ? (nextBlue <= 0 ? 'fall' : 'hurt') : 'guard')
+    setRedReaction(redTakesHit ? (nextRed <= 0 ? 'fall' : 'hurt') : 'guard')
     window.setTimeout(() => {
       setBlueHealth(nextBlue); setRedHealth(nextRed)
       if (nextBlue <= 0 || nextRed <= 0) { const winSide: Side = nextBlue > nextRed ? 'blue' : 'red'; setWinner(winSide); setPhase('finished'); onWin?.() }

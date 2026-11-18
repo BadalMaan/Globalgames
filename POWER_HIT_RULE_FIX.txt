@@ -1,0 +1,10 @@
+POWER HIT RULE FIX
+
+The arena now resolves each round as a central power collision:
+- Both selected powers launch toward the centre at the same time.
+- The power with the higher strength breaks through the collision.
+- Only that power continues to the opponent and causes damage.
+- The fighter who owns the weaker power is the only fighter who reacts as hurt / falls and loses health.
+- The fighter whose power breaks through remains in guard/attack recovery and does not play a hurt reaction.
+- If both powers have equal strength, one is randomly selected to break through so only one fighter takes a hit.
+- A shield reduces damage to its owner if that owner is the one hit; a healing power restores health to its owner only if that owner's power wins the clash.
