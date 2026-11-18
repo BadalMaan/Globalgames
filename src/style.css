@@ -698,3 +698,42 @@ body{background:var(--bg);color:var(--text)}
   .gc-footnote{font-size:5px!important}.gc-impact b{font-size:10px!important}
   .sc-featured{aspect-ratio:16/9!important}
 }
+
+/* REAL POWER ARTWORK — individual transparent elemental projectiles launched toward the opponent */
+.gc-blast{
+  top:32%!important;
+  width:55%!important;
+  height:190px!important;
+  z-index:8!important;
+  overflow:visible!important;
+  filter:drop-shadow(0 0 10px var(--blast)) drop-shadow(0 0 22px var(--blast))!important;
+  mix-blend-mode:screen!important;
+  clip-path:none!important;
+}
+.gc-blast.blue{left:17%!important;right:auto!important;transform:none!important;transform-origin:left center!important;}
+.gc-blast.red{right:17%!important;left:auto!important;transform:scaleX(-1)!important;transform-origin:left center!important;}
+.gc-blast-art{
+  position:absolute!important;inset:0!important;width:100%!important;height:100%!important;
+  object-fit:contain!important;object-position:center!important;
+  opacity:0;transform:translateX(-12%) scale(.68);
+  filter:drop-shadow(0 0 8px var(--blast)) drop-shadow(0 0 18px var(--blast2));
+  animation:power-art-launch 1.15s cubic-bezier(.16,.72,.2,1) both;
+}
+.gc-blast.red .gc-blast-art{transform:translateX(-12%) scale(.68);}
+.gc-blast-core,.gc-blast-trail,.gc-blast-particles,.gc-blast-sparks,.gc-blast-emblem{display:none!important;}
+@keyframes power-art-launch{
+  0%{opacity:0;transform:translateX(-18%) scale(.42);filter:brightness(1.5) drop-shadow(0 0 3px var(--blast));}
+  22%{opacity:1;transform:translateX(-4%) scale(.9);}
+  68%{opacity:1;transform:translateX(3%) scale(1.08);}
+  88%{opacity:1;transform:translateX(5%) scale(1.12);}
+  100%{opacity:.92;transform:translateX(7%) scale(1.14);}
+}
+.gc-impact{z-index:12!important;}
+.gc-stage.is-clashing:after{
+  content:"";position:absolute;z-index:7;left:50%;top:42%;width:clamp(75px,10vw,145px);height:clamp(75px,10vw,145px);
+  transform:translate(-50%,-50%) scale(.2);border-radius:50%;pointer-events:none;
+  background:radial-gradient(circle,#fff 0 4%,#eafaff 8%,#9deaff 18%,#ffffff00 68%);
+  filter:drop-shadow(0 0 22px #7bdcff);animation:power-impact-flash .7s ease-out .55s both;
+}
+@keyframes power-impact-flash{0%{opacity:0;transform:translate(-50%,-50%) scale(.2)}35%{opacity:1;transform:translate(-50%,-50%) scale(1.3)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.8)}}
+@media(max-width:760px){.gc-blast{top:34%!important;height:130px!important;width:62%!important}.gc-blast.blue{left:12%!important}.gc-blast.red{right:12%!important}}

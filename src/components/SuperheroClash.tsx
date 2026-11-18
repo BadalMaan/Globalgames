@@ -194,13 +194,23 @@ function PowerPicker({ side, powers, selected, active, locked, onChoose }: { sid
 }
 
 
+const powerArtwork: Record<string, string> = {
+  'THUNDER SPEAR': 'lightning', 'INFERNO WAVE': 'fire', 'FROST BREAKER': 'ice',
+  'VOID CRUSH': 'shadow', 'SOLAR BURST': 'solar', 'WIND CUTTER': 'wind',
+  'CRYSTAL GUARD': 'shield', 'METEOR KICK': 'impact', 'PLASMA ORB': 'plasma',
+  'PHANTOM DASH': 'speed', 'TIDAL DRAGON': 'water-dragon', 'OCEAN SPIRAL': 'water-vortex',
+  'PHOENIX ROAR': 'phoenix', 'FROST NOVA': 'frost-nova',
+  'GUARDIAN AEGIS': 'guardian-aegis', 'MEND AURA': 'mend-aura',
+}
+
 function PowerBlast({ side, power }: { side: Side; power: Power | null }) {
   if (!power) return null
-  return <div className={`gc-blast ${side} power-${power.type.toLowerCase()}`} aria-label={`${power.name} attack effect`}>
+  const artwork = powerArtwork[power.name] || 'plasma'
+  return <div className={`gc-blast ${side} power-${power.type.toLowerCase()} artwork-${artwork}`} aria-label={`${power.name} visual attack`}>
+    <img className="gc-blast-art" src={`/images/power-effects/${artwork}.png`} alt="" draggable={false} />
     <span className="gc-blast-core" />
     <span className="gc-blast-trail" />
     <span className="gc-blast-particles" />
     <span className="gc-blast-sparks" />
-    <span className="gc-blast-emblem">{power.type === 'WATER' ? '🐉' : power.type === 'FIRE' ? '🔥' : power.type === 'LIGHTNING' ? '⚡' : power.type === 'ICE' ? '❄' : power.type === 'SHIELD' ? '🛡' : power.type === 'HEAL' ? '💚' : power.type === 'WIND' ? '🌪' : power.type === 'SHADOW' ? '🌑' : power.type === 'SOLAR' ? '☀' : power.type === 'PLASMA' ? '💠' : power.type === 'SPEED' ? '➤' : '💥'}</span>
   </div>
 }
